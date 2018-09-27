@@ -275,9 +275,31 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	vector3 peak = vector3(0.0f, 0.0f, a_fHeight);
+	vector3 point_a = vector3(0.0f, 0.0f, 0.0f); //center point
+	vector3 point_b; //the second point of the tri
+	vector3 point_c; //the third point of the tri
+
+	float incr = (2.0f * PI) / float(a_nSubdivisions); //the radians in each angle
+	float c, s; //cosine, sine amounts
+
+	for (float theta = 0.0f; theta < 2.0f * PI; theta += incr) {
+		c = cos(theta);
+		s = sin(theta);
+
+		point_b = vector3(point_a.x + (c * a_fRadius), point_a.y + (s * a_fRadius), point_a.z);
+
+		theta += incr;
+		c = cos(theta);
+		s = sin(theta);
+
+		point_c = vector3(point_a.x + (c * a_fRadius), point_a.y + (s * a_fRadius), point_a.z);
+
+		theta -= incr;
+
+		AddTri(point_c, point_b, point_a);
+		AddTri(peak, point_b, point_c);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -299,9 +321,46 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	vector3 top = vector3(0.0f, 0.0f, a_fHeight);
+	vector3 point_a = vector3(0.0f, 0.0f, 0.0f); //center point
+	vector3 point_b, point_b2; //the second point of the tri
+	vector3 point_c, point_c2; //the third point of the tri
+
+	float incr = (2.0f * PI) / float(a_nSubdivisions); //the radians in each angle
+	float c, s; //cosine, sine amounts
+
+	for (float theta = 0.0f; theta < 2.0f * PI; theta += incr) {
+		c = cos(theta);
+		s = sin(theta);
+
+		point_b = vector3(point_a.x + (c * a_fRadius), point_a.y + (s * a_fRadius), point_a.z);
+
+		theta += incr;
+		c = cos(theta);
+		s = sin(theta);
+
+		point_c = vector3(point_a.x + (c * a_fRadius), point_a.y + (s * a_fRadius), point_a.z);
+
+		theta -= incr;
+		
+		AddTri(point_c, point_b, point_a);
+
+		c = cos(theta);
+		s = sin(theta);
+
+		point_b2 = vector3(top.x + (c * a_fRadius), top.y + (s * a_fRadius), top.z);
+
+		theta += incr;
+		c = cos(theta);
+		s = sin(theta);
+
+		point_c2 = vector3(top.x + (c * a_fRadius), top.y + (s * a_fRadius), top.z);
+
+		theta -= incr;
+
+		AddTri(top, point_b2, point_c2);
+		AddQuad(point_b, point_c, point_b2, point_c2);
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -386,11 +445,54 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Release();
 	Init();
 
-	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
-	// -------------------------------
+	a_nSubdivisions = a_nSubdivisions * 20;
+
+	float startU = 0;
+	float startV = 0;
+	float endU = PI * 2;
+	float endV = PI * 2;
+	float stepU = (endU - startU) / a_nSubdivisions;
+	float stepV = (endV - startV) / a_nSubdivisions;
+
+	for (int i = 0; i < a_nSubdivisions; i++)
+	{
+		for (int j = 0; j < a_nSubdivisions; j++)
+		{
+			float u = i * stepU + startU;
+			float v = j * stepV + startV;
+
+			float un, vn;
+			if (i + 1 == a_nSubdivisions)
+				un = endU;
+			else
+				un = (i + 1)*stepU*startU;
+
+			if (j + 1 == a_nSubdivisions)
+				vn = endV;
+			else
+				vn = (j + 1)*stepV*startV;
+
+			vector3 p0 = generateSurfaceCoords(u, v, a_fRadius);
+			vector3 p1 = generateSurfaceCoords(u, vn, a_fRadius);
+			vector3 p2 = generateSurfaceCoords(un, v, a_fRadius);
+			vector3 p3 = generateSurfaceCoords(un, vn, a_fRadius);
+
+			//AddTri(p0, p2, p1);
+			//AddTri(p0, p1, p2);
+			AddTri(p0, p2, p1);
+
+			//AddTri(p1, p3, p2);
+			//AddTri(p1, p2, p3);
+			AddTri(p3, p1, p2);
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
 	CompileOpenGL3X();
+}
+
+vector3 MyMesh::generateSurfaceCoords(float u, float v, float r)
+{
+	return vector3(cos(u)*sin(v)*r, cos(v)*r, sin(u)*sin(v)*r);
 }
