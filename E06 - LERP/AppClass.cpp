@@ -1,8 +1,21 @@
 #include "AppClass.h"
+
+vector3 v3CurrentPos;
+static float fTimer = 0;
+//int incr = 0;
+//const float fMoveSpeed = .8;
+//const float fLerpAmt = .06f;
+
+//-----------------------------
+float curr_lerp = 0.0;
+float lerp_incr = 0.01;
+int goal = 1;
+//-----------------------------
+
 void Application::InitVariables(void)
 {
 	//Change this to your name and email
-	m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
+	m_sProgrammer = "Joseph Aquiare - jpa3216@g.rit.edu";
 
 	//Set the position and target of the camera
 	m_pCameraMngr->SetPositionTargetAndUpward(vector3(5.0f,3.0f,15.0f), ZERO_V3, AXIS_Y);
@@ -47,23 +60,39 @@ void Application::Display(void)
 	m_pModel->PlaySequence();
 
 	//Get a timer
-	static float fTimer = 0;	//store the new timer
+		//store the new timer
 	static uint uClock = m_pSystem->GenClock(); //generate a new clock for that timer
 	fTimer += m_pSystem->GetDeltaTime(uClock); //get the delta time for that timer
 
-	//calculate the current position
-	vector3 v3CurrentPos;
-	
-
-
-
-
 	//your code goes here
-	v3CurrentPos = vector3(0.0f, 0.0f, 0.0f);
-	//-------------------
-	
 
+	//slingshot lerp
 
+	//v3CurrentPos = glm::lerp(v3CurrentPos, m_stopsList[incr % m_stopsList.size()], fLerpAmt);
+	//if (fTimer > (incr + 1) * fMoveSpeed)
+		//incr++;
+
+	//-----------------------------
+	if (goal != 0)
+	{
+		v3CurrentPos = glm::lerp(m_stopsList[goal - 1], m_stopsList[goal], curr_lerp);
+	}
+	else
+	{
+		v3CurrentPos = glm::lerp(m_stopsList[m_stopsList.size() - 1], m_stopsList[goal], curr_lerp);
+	}
+		
+	curr_lerp += lerp_incr;
+
+	if (glm::distance(v3CurrentPos, m_stopsList[goal]) < .1) {
+		goal++;
+		curr_lerp = 0.0f;
+	}
+
+	if (goal >= m_stopsList.size()) {
+		goal = 0;
+	}
+	//-----------------------------
 	
 	matrix4 m4Model = glm::translate(v3CurrentPos);
 	m_pModel->SetModelMatrix(m4Model);
