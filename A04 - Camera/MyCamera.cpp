@@ -150,13 +150,31 @@ void Simplex::MyCamera::CalculateProjectionMatrix(void)
 	}
 }
 
-void MyCamera::MoveForward(float a_fDistance)
+void MyCamera::MoveForward(float a_fDistance) ///Moves the camera forwards and backwards
 {
-	//The following is just an example and does not take in account the forward vector (AKA view vector)
-	m_v3Position += vector3(0.0f, 0.0f,-a_fDistance);
-	m_v3Target += vector3(0.0f, 0.0f, -a_fDistance);
-	m_v3Above += vector3(0.0f, 0.0f, -a_fDistance);
+	vector3 v3_direction = glm::normalize(m_v3Position - m_v3Target); //Direction vector in camera subspace
+
+	m_v3Position += (v3_direction * -1.0f) * a_fDistance;  //---
+	m_v3Target += (v3_direction * -1.0f) * a_fDistance;    //--- Increment
+	m_v3Above += (v3_direction * -1.0f) * a_fDistance;     //---
 }
 
-void MyCamera::MoveVertical(float a_fDistance){}//Needs to be defined
-void MyCamera::MoveSideways(float a_fDistance){}//Needs to be defined
+void MyCamera::MoveVertical(float a_fDistance) ///Moves the camera vertically up and down
+{
+	vector3 v3_up = vector3(0.0f, 1.0f, 0.0f); //Up vector in world space
+
+	m_v3Position += v3_up * a_fDistance;                   //---
+	m_v3Target += v3_up * a_fDistance;                     //--- Increment
+	m_v3Above += v3_up * a_fDistance;                      //---
+}
+
+void MyCamera::MoveSideways(float a_fDistance) ///Moves the camera left and right
+{
+	vector3 v3_direction = glm::normalize(m_v3Position - m_v3Target); //Get the basic direction position (inverted)
+	vector3 v3_up = vector3(0.0f, 1.0f, 0.0f); //Up vector reference
+	vector3 v3_right = glm::normalize(glm::cross(v3_up, v3_direction)); //Get the cross product of up and face-forward for the right vector
+
+	m_v3Position += v3_right * a_fDistance;                //--- 
+	m_v3Target += v3_right * a_fDistance;                  //--- Increment
+	m_v3Above += v3_right * a_fDistance;                   //---
+}

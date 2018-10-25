@@ -1,6 +1,11 @@
 #include "AppClass.h"
 using namespace Simplex;
 //Mouse
+
+float f_yaw = 0.0f; //The yaw rotation of the camera
+float f_pitch = 0.0f; //The pitch rotation of the camera
+const float f_sensitivity = 50.0f; //The sensitivity of the mouse movement
+
 void Application::ProcessMouseMovement(sf::Event a_event)
 {
 	//get global mouse position
@@ -368,9 +373,23 @@ void Application::CameraRotation(float a_fSpeed)
 		fDeltaMouse = static_cast<float>(MouseY - CenterY);
 		fAngleX += fDeltaMouse * a_fSpeed;
 	}
-	//Change the Yaw and the Pitch of the camera
-	SetCursorPos(CenterX, CenterY);//Position the mouse in the center
+	
+#pragma region Set Yaw & Pitch + Rotate
+	//----------------------------------------------------------------------------------------------------------------------------------
+	f_yaw += -fAngleY * f_sensitivity; //Set the yaw value
+	f_pitch += fAngleX * f_sensitivity; //Set the pitch value
+	vector3 front; //Create a pseudo-vector
+	front.x = cos(glm::radians(f_pitch)) * cos(glm::radians(f_yaw)); //Change X based on pitch and yaw
+	front.y = -sin(glm::radians(f_pitch)); //Change Y based on Pitch
+	front.z = cos(glm::radians(f_pitch)) * sin(glm::radians(f_yaw)); //Change Z based on pitch and yaw
+	m_pCamera->SetTarget(glm::lerp(m_pCamera->GetTarget(), m_pCamera->GetPosition() + front, 0.2f)); //Set Camera position to new target
+	///                          ^------ Extra credit? Camera smoothing/position interpolation
+	//----------------------------------------------------------------------------------------------------------------------------------
+#pragma endregion
+
+	SetCursorPos(CenterX, CenterY); //Position the mouse in the center
 }
+
 //Keyboard
 void Application::ProcessKeyboard(void)
 {
@@ -390,6 +409,16 @@ void Application::ProcessKeyboard(void)
 		m_pCamera->MoveForward(fSpeed);
 	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
 		m_pCamera->MoveForward(-fSpeed);
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+		m_pCamera->MoveSideways(-fSpeed);
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+		m_pCamera->MoveSideways(fSpeed);
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
+		m_pCamera->MoveVertical(-fSpeed);
+	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+		m_pCamera->MoveVertical(fSpeed);
 #pragma endregion
 }
 //Joystick
