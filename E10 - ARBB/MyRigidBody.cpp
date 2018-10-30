@@ -85,9 +85,53 @@ void MyRigidBody::SetModelMatrix(matrix4 a_m4ModelMatrix)
 	m_m4ToWorld = a_m4ModelMatrix;
 	
 	//your code goes here---------------------
-	m_v3MinG = m_v3MinL;
-	m_v3MaxG = m_v3MaxL;
+
+	vector3 v3Vertices[8];
+
+	//Bounding Box Verticies
+
+	//LOCAL BOX
+
+	v3Vertices[0] = m_v3MinL; // Set the first vertex to the minimum length
+	//              ^----------- Starting from bottom left corner (back)
+	v3Vertices[1] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MinL.z); //Mmm
+	v3Vertices[2] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MinL.z); //mMm
+	v3Vertices[3] = vector3(m_v3MaxL.x, m_v3MaxL.y, m_v3MinL.z); //MMm
+	v3Vertices[4] = vector3(m_v3MinL.x, m_v3MinL.y, m_v3MaxL.z); //mmM
+	v3Vertices[5] = vector3(m_v3MaxL.x, m_v3MinL.y, m_v3MaxL.z); //MmM
+	v3Vertices[6] = vector3(m_v3MinL.x, m_v3MaxL.y, m_v3MaxL.z); //mMM
+	//              v----------- Ending at maximum point, top right (front)
+	v3Vertices[7] = m_v3MaxL;
 	//----------------------------------------
+
+	for (uint i = 0; i < 8; ++i)
+	{
+		v3Vertices[i] = vector3(
+			m_m4ToWorld * vector4(v3Vertices[i], 1.0f)
+		);
+	}
+
+	m_v3MaxG = v3Vertices[0];
+	m_v3MinG = v3Vertices[0];
+
+	//GLOBAL BOX
+	for (uint i = 1; i < 8; ++i)
+	{
+		if (m_v3MaxG.x < v3Vertices[i].x) //FIND X MAX
+			m_v3MaxG.x = v3Vertices[i].x;
+		else if (m_v3MinG.x > v3Vertices[i].x) //FIND X MIN
+			m_v3MinG.x = v3Vertices[i].x;
+
+		if (m_v3MaxG.y < v3Vertices[i].y)  //FIND Y MAX
+			m_v3MaxG.y = v3Vertices[i].y;
+		else if (m_v3MinG.y > v3Vertices[i].y) //FIND Y MIN
+			m_v3MinG.y = v3Vertices[i].y;
+
+		if (m_v3MaxG.z < v3Vertices[i].z) //FIND Z MAX
+			m_v3MaxG.z = v3Vertices[i].z;
+		else if (m_v3MinG.z > v3Vertices[i].z) //FIND Z MIN
+			m_v3MinG.z = v3Vertices[i].z;
+	}
 
 	//we calculate the distance between min and max vectors
 	m_v3ARBBSize = m_v3MaxG - m_v3MinG;
